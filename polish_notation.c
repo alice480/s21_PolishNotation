@@ -1,59 +1,91 @@
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include "calculate.h"
-#define Operations "+", "-", "*", "/", "sin", "cos", "tg", "ctg", "sqrt", "ln" // max length 4
+#include "rpn.h"
 
-int is_operator(char *simbols);
-char math_operation(char *simbols, char number1, char number2);
+char** convert_to_rpn(char** buf, int buf_size, int str_size, int* rpn_size) {
+    node* head = NULL;
+    char* func_arr[] = {FUNCTIONS};
+    int found_func;
+    char* trash = malloc(sizeof(char));
+    char peek_buf;
 
-int main() {
-    char *expres = "- * / 5 - 7 + 1 1 2 + 2 + 1 1";
-    struct node *head;
-    head = init(expres[0]);  // checking of null str
-    head = push(expres[1], head);
-    char new_value;
-    for (int i = 2; *(expres + i); i++) {
-        if (expres[i] != ' ')
-            head = push(expres[i], head);
-        if (is_operator(head->next->next->number) &&
-            !is_operator(head->next->number) && !is_operator(head->number)) {
-                new_value = math_operation(head->next->next->number, head->next->number, head->number);
-                head = pop(head);
-                head = pop(head);
-                head = pop(head);
-                head = push(new_value, head);
+    char** rpn = malloc(sizeof(char*) * buf_size);
+    for (int i = 0; i < buf_size; i++) {
+        rpn[i] = malloc(sizeof(char) * str_size);
+    }
+    int rpn_i = 0;
+
+    for (int i = 0; i < buf_size; i++) {
+       int flag_func = 0;
+       int flag_num = 0;
+        for (int j = 0; j < FCOUNT; j++) {
+            if (!strcmp(buf[i], func_arr[j])) {
+                head = push(head, buf[i]);
+                flag_func = 1;
+            }
+        }
+        if (flag_func == 0) {
+            if ((buf[i][0] >= 48 && buf[i][0] <= 57) || buf[i][0] == 120 || buf[i][0] == 88) {
+                strcpy(rpn[rpn_i], buf[i]);
+                rpn_i++;
+                flag_num = 1;
+            }
+        }
+        if (flag_func == 0 && flag_num == 0) {
+            switch (buf[i][0]) {
+                case '(':
+                    head = push(head, "(");
+                    break;
+
+                case ')':
+                    while (strcmp(peek(head), "(")) {
+                        head = pop(head, &rpn[rpn_i]);
+                        rpn_i++;
+                    }
+                    head = pop(head, &trash);
+                    for (int j = 0; j < FCOUNT; j++)
+                        if (peek(head) == func_arr[j]) found_func = 1;
+                    if (found_func) {
+                        head = pop(head, &rpn[rpn_i]);
+                        rpn_i++;
+                    }
+                    break;
+
+                case '*':
+                case '/':
+                case '+':
+                case '-':
+                case '#':
+                    if (peek(head) != NULL) {
+                        peek_buf = peek(head)[0];
+                        while ((peek_buf == '+' || peek_buf == '-' || peek_buf == '*' || peek_buf == '/' ||
+                                peek_buf == '#') &&
+                               (precedence(peek_buf) > precedence(buf[i][0]))) {
+                            head = pop(head, &rpn[rpn_i]);
+                            if (peek(head) != NULL) {
+                                peek_buf = peek(head)[0];
+                            } else {
+                                peek_buf = '\0';
+                            }
+                            rpn_i++;
+                        }
+                    }
+                    head = push(head, buf[i]);
+                    break;
+            }
         }
     }
-    printf("%d", head->number);
-    destroy(head);
+    while (head != NULL) {
+        head = pop(head, &rpn[rpn_i]);
+        rpn_i++;
+    }
+    *rpn_size = rpn_i;
+    free(trash);
+    return rpn;
 }
 
-int is_operator(char *simbols) {
-    int flag = 0;
-    char *operators[10] = {Operations};
-    for (int i = 0; i < 10; i++)
-        flag += (!strcmp(simbols, operators[i]));
-    return flag;
-}
-
-char math_operation(char *simbols, char number1, char number2) {
-    char result;
-    if (!strcmp(simbols, "+"))
-        result = number1 + number2;
-    else if (!strcmp(simbols, "-"))
-        result = number1 - number2;
-    else if (!strcmp(simbols, "*"))
-        result = number1 * number2;
-    else if (!strcmp(simbols, "/"))
-        result = number1 / number2;
-    else if (!strcmp(simbols, "sin"))
-        result = (sin(number1));
-    else if (!strcmp(simbols, "cos"))
-        result = (cos(number1));
-    else if (!strcmp(simbols, "tg"))
-        result = (tan(number1));
-    else if (!strcmp(simbols, "tg"))
-        result = (t);
-    return result;
+int precedence(char op) {
+    int ans;
+    if (op == '+' || op == '-') ans = 1;
+    if (op == '*' || op == '/') ans = 2;
+    if (op == '#') ans = 3;
+    return ans;
 }
