@@ -2,19 +2,27 @@ CC = gcc
 CFLAGS = -Wall -Wextra -Werror
 DIR = ../build/
 
-all:
+all: project
 
-calculate.o: calculate.c
-	$(CC) $(CFLAGS) -c calculate.c
+rpn.o: rpn.c
+	$(CC) $(CFLAGS) -c rpn.c
 
-polish_notation.o: polish_notation.c
-	$(CC) $(CFLAGS) -c polish_notation.c
+input.o: input.c
+	$(CC) $(CFLAGS) -c input.c
 
-project: polish_notation.o calculate.o
-	$(CC) -o $(DIR)Project polish_notation.o calculate.o
+stack.o: stack.c
+	$(CC) $(CFLAGS) -c stack.c
+
+calculating.o: calculating.c
+	$(CC) $(CFLAGS) -c calculating.c
+
+rpn_test.o: rpn_test.c
+	$(CC) $(CFLAGS) -c rpn_test.c
+
+project: rpn_test.o input.o stack.o rpn.o calculating.o
+	$(CC) -o $(DIR)graph rpn_test.c input.o stack.o rpn.o calculating.o
 
 clean:
 	rm -rf *.o
-	rm -rf ../build/Project*
 
 rebuild: clean all
