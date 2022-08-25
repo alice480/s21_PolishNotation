@@ -1,15 +1,18 @@
-#ifndef SRC_CALCULATE_H_
-#define SRC_CALCULATE_H_
+#ifndef SRC_CALCULATING_H_
+#define SRC_CALCULATING_H_
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
-struct node {
-    char number;
-    struct node* next;
+struct d_node {
+    float number;
+    struct d_node* next;
 };
 
-struct node* init(char number);
-struct node* pop(struct node* head);
-struct node* push(char number, struct node* head);
-void destroy(struct node* root);
+struct d_node* d_init(float number);
+struct d_node* d_push(float number, struct d_node* head);
+void destroy(struct d_node* root);
 
-#endif  // SRC_CALCULATE_H_
+float value_calculating(float x, char **rpn, int rpn_size);
+
+#endif  // SRC_CALCULATING_H_
